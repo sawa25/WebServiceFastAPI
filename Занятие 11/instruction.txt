@@ -1,0 +1,26 @@
+$env:PATH = "$HOME\AppData\Local\Programs\Python\Python311\;$env:PATH"
+
+1. Установить Python 3.9.13
+2. Установить VSCode
+3. Открыть проект с файлами занятия в VSCode и установить все необходимые библиотеки. 
+Это делается при помощи команды: 
+conda create --name env3114 python=3.11.4
+conda activate env3114
+cd "C:\Users\v.volkov\Documents\GitHub\WebServiceFastAPI\Занятие 11"
+pip install -r requirements.txt
+здесь нет необходимых библиотек:conda install --file requirements.txt
+conda config --set auto_activate_base false
+в терминале vscode: conda activate env3114
+
+4. Создать файл .env с переменными окружения и записать туда Ваш токен chatgpt.
+
+
+1) Быстрый старт:
+pip install uvicorn -  установит uvicorn с минимальными (чистыми Python) зависимостями. 
+pip install 'uvicorn[стандарт]'  - установит uvicorn с зависимостями на основе Cython (где это возможно) и другими «дополнительными возможностями».
+2) Просмотр доступных команд:
+uvicorn --help 
+3) Запуск (минимальный):
+uvicorn  имя_файла:имя_объекта_в файле --port номер порта (5000)
+uvicorn main:app --port 5000
+

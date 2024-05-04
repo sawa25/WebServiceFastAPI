@@ -1,0 +1,11 @@
+t38/
+.t38/
+.vscode/
+borndigital/
+__pycache__/
+.~*
+.env
+googledriveutopian-theater-338909-30c6f2cd39b6.json
+crop/
+rtdocs/
+agentAI/*.VIC/*
