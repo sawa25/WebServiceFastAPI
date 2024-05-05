@@ -1,32 +1,35 @@
-from langchain.embeddings.openai import OpenAIEmbeddings
+from dotenv import load_dotenv
+import os
+os.environ.clear()
+load_dotenv(".env")
+# для ubuntu эти переменные не нужны, а для windows не помогло
+# print(os.environ.get("SSL_CERT_FILE"))
+# print(os.environ.get('REQUESTS_CA_BUNDLE'))
+
+from langchain_openai import OpenAIEmbeddings
+# print(dir(OpenAIEmbeddings))
+# print(OpenAIEmbeddings.__doc__)
+
+# from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.docstore.document import Document
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-from googleapiclient.http import MediaIoBaseDownload
-import httplib2
-import google_auth_httplib2
-import io
-import os
-# import logging
-# logging.basicConfig(filename="err.txt",level=logging.DEBUG)
+
 import openai
-from dotenv import load_dotenv
-os.environ.clear()
-load_dotenv(".env")
-
-# API-key
+from openai import OpenAI
 openai.api_key = os.environ.get("OPENAI_API_KEY")
+openai.verify_ssl_certs = False
 # print(os.environ.get("OPENAI_API_KEY"))
-
-# задаем system
-default_system = "Ты-консультант в компании Simble, ответь на вопрос клиента на основе документа с информацией. Не придумывай ничего от себя, отвечай максимально по документу. Не упоминай Документ с информацией для ответа клиенту. Клиент ничего не должен знать про Документ с информацией для ответа клиенту"
-
 
 # Укажите путь к директории
 folder_path = ''
+# задаем system
+default_system = '''Ты-консультант по ПРАВИЛАМ СТРАХОВАНИЯ.
+Ответь на вопрос клиента на основе переданного тебе документа с соответствующими правилами. 
+Не придумывай ничего от себя, отвечай максимально по документу. 
+Не упоминай Документ с информацией для ответа клиенту. 
+Клиент ничего не должен знать про Документ с информацией для ответа клиенту
+'''
 
 # Проверяем существование файлов
 def check_files_exist(folder_path, file_names):
@@ -35,28 +38,30 @@ def check_files_exist(folder_path, file_names):
         if os.path.exists(file_path):
             pass
         else:
-            print(f"Файл '{file_name}' не найден в директории '{folder_path}'.")
+            print(f"Файл '{file_name}' не найден в директории, значит выполнить индексацию '{folder_path}'.")
             return False
     return True
-# Список файлов для проверки
-files_to_check = ['dbfaiss_from_langchain.faiss', 'dbfaiss_from_langchain.pkl']
 
 
 
 class LLMModel():
     def __init__(self, folder_path: str, sep: str = " ", ch_size: int = 1024):
+        self.client = OpenAI()
+        embeddings = OpenAIEmbeddings()
 
+        index_name = "dbaerofaiss_from_langchain"
+        # Список файлов для проверки
+        files_to_check = [f'{index_name}.faiss', f'{index_name}.pkl']
         # Вызов функции проверки
         if check_files_exist(folder_path, files_to_check):
             # возможность загрузки предварительно сохраненной индексной базы с диска
-            embeddings = OpenAIEmbeddings()
             # Имя, используемое при сохранении файлов
-            index_name = "dbfaiss_from_langchain"
             # Загрузка данных и создание нового экземпляра FAISS
             self.db = FAISS.load_local(
                 folder_path=folder_path,
                 embeddings=embeddings,
-                index_name=index_name
+                index_name=index_name,
+                allow_dangerous_deserialization=True # Разрешить десериализацию проиндексированной ранее базы знаний
             )
 
         else: # база не проиндексирована - сделать это с нуля
@@ -75,13 +80,12 @@ class LLMModel():
                 source_chunks.append(Document(page_content=chunk, metadata={}))
 
             # создаем индексную базу
-            embeddings = OpenAIEmbeddings()
             self.db = FAISS.from_documents(source_chunks, embeddings)
-
             # сохраняем db_from_texts на ваш гугл драйв
             self.db.save_local(folder_path=folder_path, index_name=index_name)        
 
-    def get_answer(self, system: str = default_system, query: str = None):
+
+    def get_answer(self,query: str = None, system: str = default_system):
         '''Функция получения ответа от chatgpt
         '''
         # релевантные отрезки из базы
@@ -95,8 +99,12 @@ class LLMModel():
         ]
 
         # получение ответа от chatgpt
-        completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",
-                                                  messages=messages,
-                                                  temperature=0)
+        completion = self.client.chat.completions.create(
+            model="gpt-3.5-turbo-0125", #gpt-3.5-turbo-1106
+            # response_format={ "type": "json_object" },
+            messages=messages,
+            temperature=0
+        )
 
         return completion.choices[0].message.content
+# model = LLMModel("")
