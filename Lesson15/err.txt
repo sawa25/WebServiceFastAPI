@@ -1,2 +1,0 @@
-
-DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): openaipublic.blob.core.windows.net:443
