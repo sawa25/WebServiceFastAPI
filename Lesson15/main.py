@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 # from model import getfilefromgoogledisk пока не доработано
 import logging #поиски сбоев ssl под windows (проблема не решена)
 logging.basicConfig(filename="err1.txt",level=logging.DEBUG)
@@ -21,7 +22,13 @@ class CountCalls:
         return self.func(*args, **kwargs)
 
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins="*",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # получение количества вызовов каждой функции
 @app.get("/calls")
 def get_calls():
