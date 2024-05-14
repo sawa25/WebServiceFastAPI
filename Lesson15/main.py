@@ -92,5 +92,8 @@ def post_answer(question: Item):
     answer = model.get_answer(query=question.text)
     return {"message": answer}
 
-
+@app.get("/api/get_answer")
+@CountCalls
+def get_answer():
+    return {"message":"should be post method"}
 

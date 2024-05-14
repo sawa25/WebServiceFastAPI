@@ -1,4 +1,0 @@
-INFO:numexpr.utils:NumExpr defaulting to 1 threads.
-INFO:numexpr.utils:NumExpr defaulting to 1 threads.
-INFO:numexpr.utils:NumExpr defaulting to 1 threads.
-INFO:numexpr.utils:NumExpr defaulting to 1 threads.
