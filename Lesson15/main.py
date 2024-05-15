@@ -34,6 +34,12 @@ app.add_middleware(
 def get_calls():
     test = '</br>'.join([f"{func}={cnt}" for func, cnt in CountCalls.calls.items()])
     return {"message": test}
+@app.get("/api/num_requests")
+def get_sumcalls():
+    sum=0
+    for func, cnt in CountCalls.calls.items():
+        sum+=cnt
+    return {"num_requests": sum}
 
 @app.get("/")
 @CountCalls

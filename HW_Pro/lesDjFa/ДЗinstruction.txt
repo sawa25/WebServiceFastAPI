@@ -10,7 +10,8 @@ django-admin startproject django_chatbot
 python manage.py startapp chatbot
 т.к. оно уже присутствует
 
-4.Дополнены секции настроек в файлах:
+4.В папке проекта HW_Pro/lesDjFa/django_chatbot/django_chatbot 
+дополнены секции настроек в файлах:
 settings.py
     INSTALLED_APPS = [
         'chatbot',
@@ -23,27 +24,23 @@ settings.py
         BASE_DIR /'static/'static/chatbot',
         BASE_DIR /'chatbot/static'
     ]
-5. Замена в файле start.html 
+5.В папке HW_Pro/lesDjFa/django_chatbot/templates 
+замена хтмл кода в файле start.html:
 <a href="{% url 'chatbot' %}">
 на <a href="{% url 'chatbots' %}">
 <a href="{% url 'stats' %}">
 на <a href="{% url 'stat' %}">
 
-4. Запустить проект на локальном сервере (для проверки работоспособности):
+6.Адаптирован код из урока 15(Lesson15):
+Добавлен возврат {"num_requests": sum}  и создана новая функция подсчета количества вызовов и
+декоратор @app.get("/api/num_requests") (у меня была неподходящая функция для кода в этом задании)
 
+7.Запущен сервис из урока 15:
+uvicorn main:app --port 5000
+
+8.Запущен django сервис из данного задания:
 python manage.py runserver
 
-После проверки работоспособности остановить командой Ctrl+C
-
-
-4. Добавить в проект новое приложение при помощи команды:
-
-
-
-
-5. Наполнить приложение всем необходимым функционалом (views, urls, templates, static и тд)
-
-
-6. Запустить готовый проект:
-
-python manage.py runserver
+чат бот из моего урока 15 отвечает и статистика по вызовам отображается.
+больше я ничего не поправлял в коде.
+сервис из папки HW_Pro/lesDjFa/fastapi я не пытался запустить, т.к. альтернативную задачу я решал на прошлом уроке.
