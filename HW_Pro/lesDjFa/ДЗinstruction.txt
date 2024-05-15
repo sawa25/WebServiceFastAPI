@@ -1,0 +1,49 @@
+Для запуска проекта выполнены действия:
+1.Установка необходимой библиотеки
+pip install django
+
+2.Проект уже присутствует в исходной папке,
+поэтому пропущена команда:
+django-admin startproject django_chatbot
+
+3.Пропущена команда добавления приложения:
+python manage.py startapp chatbot
+т.к. оно уже присутствует
+
+4.Дополнены секции настроек в файлах:
+settings.py
+    INSTALLED_APPS = [
+        'chatbot',
+    ]
+    TEMPLATES[{
+        'DIRS': [BASE_DIR / 'templates'],
+    }]
+    STATIC_URL='static/'
+    STATICFILES_DIRS=[
+        BASE_DIR /'static/'static/chatbot',
+        BASE_DIR /'chatbot/static'
+    ]
+5. Замена в файле start.html 
+<a href="{% url 'chatbot' %}">
+на <a href="{% url 'chatbots' %}">
+<a href="{% url 'stats' %}">
+на <a href="{% url 'stat' %}">
+
+4. Запустить проект на локальном сервере (для проверки работоспособности):
+
+python manage.py runserver
+
+После проверки работоспособности остановить командой Ctrl+C
+
+
+4. Добавить в проект новое приложение при помощи команды:
+
+
+
+
+5. Наполнить приложение всем необходимым функционалом (views, urls, templates, static и тд)
+
+
+6. Запустить готовый проект:
+
+python manage.py runserver

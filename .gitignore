@@ -1,10 +1,13 @@
 t38/
 .t38/
 .vscode/
+.idea/
 borndigital/
 __pycache__/
 .~*
 .env
+.DS_Store
+err1.txt
 googledriveutopian-theater-338909-30c6f2cd39b6.json
 crop/
 rtdocs/
