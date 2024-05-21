@@ -6,7 +6,9 @@ import sys
 
 # подгружаем переменные окружения
 load_dotenv()
+# словарь хранит выбранный язык интерфейса для пользователя по ключу userid
 userinterface={}
+# папка, относительно которой искать папку photos для сохранения картинки
 script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 # токен бота
@@ -26,6 +28,7 @@ async def start(update: Update, _):
     await update.message.reply_text("Привет! Выберите язык интерфейса.\nHello!Choose the interface language.", 
                                     reply_markup=inline_keyboard)
 
+# определять язык интерфейса для пользователя по id
 def interface(id:str)->str:
     global userinterface
     if userinterface[id]=="ru":
