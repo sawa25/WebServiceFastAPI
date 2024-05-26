@@ -17,6 +17,8 @@ from langchain.docstore.document import Document
 
 import openai
 from openai import OpenAI
+from openai import AsyncOpenAI
+
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 openai.verify_ssl_certs = False
 # print(os.environ.get("OPENAI_API_KEY"))
@@ -27,8 +29,7 @@ folder_path = ''
 default_system = '''Ты-консультант по ПРАВИЛАМ СТРАХОВАНИЯ.
 Ответь на вопрос клиента на основе переданного тебе документа с соответствующими правилами. 
 Не придумывай ничего от себя, отвечай максимально по документу. 
-Не упоминай Документ с информацией для ответа клиенту. 
-Клиент ничего не должен знать про Документ с информацией для ответа клиенту
+Если в запросе клиента тебе передана история предшествующего диалога (в формате Вопрос1:...\nОтвет1:...,Последний вопрос:...), используй эту информацию для более точного ответа.
 '''
 
 # Проверяем существование файлов
@@ -46,7 +47,12 @@ def check_files_exist(folder_path, file_names):
 
 class LLMModel():
     def __init__(self, folder_path: str, sep: str = " ", ch_size: int = 1024):
-        self.client = OpenAI()
+        # self.client = OpenAI() для синхронной версии
+        self.client = AsyncOpenAI(
+            # This is the default and can be omitted
+            api_key=os.environ.get("OPENAI_API_KEY"),
+        )
+
         embeddings = OpenAIEmbeddings()
 
         index_name = "dbaerofaiss_from_langchain"
@@ -107,4 +113,29 @@ class LLMModel():
         )
 
         return completion.choices[0].message.content
+
+    async def async_get_answer(self,query: str = None, system: str = default_system):
+        '''Асинхронная функция получения ответа от chatgpt
+        '''
+        # релевантные отрезки из базы
+        docs = self.db.similarity_search(query, k=4)
+        message_content = '\n'.join([f'{doc.page_content}' for doc in docs])
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": f"Ответь на вопрос клиента. Не упоминай документ с информацией для \
+                                          ответа клиенту в ответе. Документ с информацией для ответа клиенту:\
+                                          {message_content}\n\nПредшествующий диалог и очередной вопрос клиента: \n{query}"}
+        ]
+
+        # получение ответа от chatgpt
+        completion = await self.client.chat.completions.create(
+            model="gpt-3.5-turbo-0125", #gpt-3.5-turbo-1106
+            # response_format={ "type": "json_object" },
+            messages=messages,
+            temperature=0
+        )
+
+        return completion.choices[0].message.content
+
+
 # model = LLMModel("")

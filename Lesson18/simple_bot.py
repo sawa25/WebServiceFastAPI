@@ -6,6 +6,8 @@ import os
 import requests
 import aiohttp
 import json
+from collections import deque
+
 
 
 # подгружаем переменные окружения
@@ -39,7 +41,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # при первом запуске бота добавляем этого пользователя в словарь
     if update.message.from_user.id not in context.bot_data.keys():
-        context.bot_data[update.message.from_user.id] = 3
+        # Создаем очередь с максимальным размером 5
+        queue = deque(maxlen=5)
+        # хранить в словаре кортеж -
+        # количество оставшихся запросов и очередь последних 5 вопросов и ответов
+        context.bot_data[update.message.from_user.id] = (3,queue)
+
     
     # возвращаем текстовое сообщение пользователю
     await update.message.reply_text('Задайте любой вопрос ChatGPT')
@@ -60,17 +67,29 @@ async def data(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # проверка доступных запросов пользователя
-    if context.bot_data[update.message.from_user.id] > 0:
+    # очередь хранится во втором элементе кортежа
+    (reqcnt,queue)=context.bot_data[update.message.from_user.id]
+    if reqcnt > 0:
 
         # выполнение запроса в chatgpt
         first_message = await update.message.reply_text('Ваш запрос обрабатывается, пожалуйста подождите...')
-        # res = await get_answer(update.message.text)
-        res = await get_answer_async(update.message.text)
-        await context.bot.edit_message_text(text=res['message'], chat_id=update.message.chat_id, message_id=first_message.message_id)
-
+        # предшествующий диалог+последний вопрос
+        dial=""
+        for i,dicqa in enumerate(queue):
+            dial=f'{dial}\nВопрос{i}:{dicqa["question"]}\nОтвет{i}:{dicqa["answer"]}'
+        # последний вопрос пользователя
+        dial=f"{dial}\nПоследний вопрос:{update.message.text}"
+        await context.bot.edit_message_text(text=f"Передан предшествующий диалог и очередной вопрос:\n{dial}", chat_id=update.message.chat_id, message_id=first_message.message_id)
+        res = await get_answer_async(dial)
+        await update.message.reply_text(f'Ответ: {res["message"]}')
+        # составить очередную пару вопрос-ответ
+        nextq= {"question": update.message.text,"answer": res['message']}
+        queue.append(nextq)
         # уменьшаем количество доступных запросов на 1
-        context.bot_data[update.message.from_user.id]-=1
-        await update.message.reply_text(f'Осталось запросов: {context.bot_data[update.message.from_user.id]}')
+        # количество хранится в первом элементе кортежа
+        reqcnt-=1
+        context.bot_data[update.message.from_user.id]=(reqcnt,queue)
+        await update.message.reply_text(f'Осталось запросов: {reqcnt}')
     
     else:
 
@@ -82,11 +101,11 @@ async def text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def callback_daily(context: ContextTypes.DEFAULT_TYPE):
 
     # проверка базы пользователей
-    if context.bot_data != {}:
-
+    if len(context.bot_data)>0:
         # проходим по всем пользователям в базе и обновляем их доступные запросы
         for key in context.bot_data:
-            context.bot_data[key] = 5
+            (_,queue)=context.bot_data[key]
+            context.bot_data[key] = (6,queue)
         print('Запросы пользователей обновлены')
     else:
         print('Не найдено ни одного пользователя')

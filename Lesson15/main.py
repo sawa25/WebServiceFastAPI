@@ -98,6 +98,13 @@ def post_answer(question: Item):
     answer = model.get_answer(query=question.text)
     return {"message": answer}
 
+# асинхронная функция обработки post запроса + декоратор 
+@app.post("/api/get_answer_async")
+async def get_answer_async(question: Item):
+    answer = await model.async_get_answer(query=question.text)
+    return {"message": answer}
+
+
 @app.get("/api/get_answer")
 @CountCalls
 def get_answer():
